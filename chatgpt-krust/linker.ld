@@ -26,6 +26,7 @@ SECTIONS
     } :data
 
     .bss : {
+        . = ALIGN(8);
         __bss_start = .;
         *(.bss*)
         *(COMMON)

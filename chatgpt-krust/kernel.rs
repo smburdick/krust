@@ -3,6 +3,7 @@
 #![no_main]
 
 use core::panic::PanicInfo;
+mod uart;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn kernel_main() -> ! {
@@ -10,15 +11,9 @@ pub extern "C" fn kernel_main() -> ! {
 }
 
 fn say_hello() -> ! {
-    let uart = 0x0900_0000 as *mut u8;
-
-    let message = b"Hello from ARM64 bare metal!\r\n";
-
-    unsafe {
-        for byte in message {
-            uart.write_volatile(*byte);
-        }
-    }
+    
+    let message = "Hello from ARM64 bare metal!\r\n";
+    uart::write_str(message);
 
     loop {
         unsafe {

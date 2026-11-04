@@ -31,4 +31,10 @@ qemu: all
     -kernel kernel.elf
 
 clean:
-	rm *.o *.elf *.map
+	rm *.o *.elf *.map *.dtb *.dts
+
+dtb:
+	qemu-system-aarch64 \
+    -machine virt,dumpdtb=virt.dtb \
+    -cpu cortex-a72
+	dtc -I dtb -O dts virt.dtb > virt.dts

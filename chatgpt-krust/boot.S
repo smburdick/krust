@@ -3,6 +3,17 @@
 .global _start // globally visible symbol
 
 _start:
+    // Clear BSS
+    ldr x0, =__bss_start
+    ldr x1, =__bss_end
+
+clear_bss:
+    cmp x0, x1
+    b.hs bss_done
+    str xzr, [x0], #8
+    b clear_bss
+
+bss_done:
     // Set up our stack.
     ldr x0, =_stack_top // load stack top cst into x0
     mov sp, x0 // set sp = x0
