@@ -1,24 +1,26 @@
 all:
+
+	mkdir -p bin
+
 	clang \
 		--target=aarch64-none-elf \
-		-c boot.S \
-		-o boot.o
+		-c src/boot.S \
+		-o bin/boot.o
 
 	rustc \
 		--target aarch64-unknown-none \
 		--crate-type staticlib \
 		-C panic=abort \
 		-C opt-level=2 \
-		--emit=obj \
-		kernel.rs \
-		-o kernel.o
+		src/kernel.rs \
+		-o bin/libkernel.a
 
 	aarch64-elf-gcc \
 		-nostdlib \
-		-T linker.ld \
-		-Wl,-Map=kernel.map \
-		boot.o kernel.o \
-		-o kernel.elf
+		-T src/linker.ld \
+		-Wl,-Map=bin/kernel.map \
+		bin/boot.o bin/libkernel.a \
+		-o bin/kernel.elf
 
 qemu: all
 	qemu-system-aarch64 \
@@ -28,10 +30,11 @@ qemu: all
     -serial stdio \
     -display none \
     -monitor tcp:127.0.0.1:4444,server,nowait \
-    -kernel kernel.elf
+    -kernel bin/kernel.elf
 
 clean:
-	rm *.o *.elf *.map *.dtb *.dts
+	rm *.o *.elf *.map *.dtb *.dts *.a
+	rm -rf bin/
 
 dtb:
 	qemu-system-aarch64 \
