@@ -4,17 +4,35 @@
 
 use core::fmt::Write;
 use core::panic::PanicInfo;
+use core::arch::asm;
+
 mod uart;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn kernel_main() -> ! {
-    say_hello();
-    say_current_el();
-    loop {
-        unsafe {
-            core::arch::asm!("wfe");
-        }
+pub extern "C" fn kernel_main() -> () {
+    // say_hello();
+    // say_current_el();
+
+    let mut uart = uart::UartWriter;
+    let spsel: u64;
+
+    unsafe {
+        core::arch::asm!(
+            "mrs {}, SPSel",
+            out(reg) spsel
+        );
     }
+
+    writeln!(uart, "SPSel: {:#x}", spsel).unwrap();
+
+    unsafe {
+        asm!("brk #0");
+    }
+    // loop {
+    //     unsafe {
+    //         asm!("wfe");
+    //     }
+    // }
 }
 
 
