@@ -7,32 +7,49 @@ use core::panic::PanicInfo;
 use core::arch::asm;
 
 mod uart;
+mod exception;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn kernel_main() -> () {
     // say_hello();
     // say_current_el();
 
-    let mut uart = uart::UartWriter;
-    let spsel: u64;
+    // let mut uart = uart::UartWriter;
+    // let spsel: u64;
 
-    unsafe {
-        core::arch::asm!(
-            "mrs {}, SPSel",
-            out(reg) spsel
-        );
-    }
+    // unsafe {
+    //     core::arch::asm!(
+    //         "mrs {}, SPSel",
+    //         out(reg) spsel
+    //     );
+    // }
 
-    writeln!(uart, "SPSel: {:#x}", spsel).unwrap();
+    // writeln!(uart, "SPSel: {:#x}", spsel).unwrap();
 
-    unsafe {
-        asm!("brk #0");
-    }
+    // text_exception();
+    test_invalid_instruction();
+    
     // loop {
     //     unsafe {
     //         asm!("wfe");
     //     }
     // }
+}
+
+fn test_invalid_instruction() -> () {
+    unsafe {
+        asm!(".inst 0x0");
+    }
+}
+
+fn divide_by_zero(x: usize) -> () {
+    let k = 1 / x;
+}
+
+fn text_exception() -> () {
+    unsafe {
+        asm!("movz x4, #0xBEEF", "movk x4, #0xDEAD, lsl #16", "brk #0", out("x4") _,); // breakpoint exception class 0x3c
+    }
 }
 
 

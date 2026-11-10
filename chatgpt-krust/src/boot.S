@@ -80,19 +80,52 @@ vectors:
 
 .global sync_handler
 sync_handler:
-    mrs x2, ESR_EL1
+    // allocate exception frame
+    sub sp, sp, #288
+    stp x0, x1, [sp, #0]
+    stp x2, x3, [sp, #16]
+    stp x4, x5, [sp, #32]
+    stp x6, x7, [sp, #48]
+    stp x8, x9, [sp, #64]
+    stp x10, x11, [sp, #80]
+    stp x12, x13, [sp, #96]
+    stp x14, x15, [sp, #112]
+    stp x16, x17, [sp, #128]
+    stp x18, x19, [sp, #144]
+    stp x20, x21, [sp, #160]
+    stp x22, x23, [sp, #176]
+    stp x24, x25, [sp, #192]
+    stp x26, x27, [sp, #208]
+    stp x28, x29, [sp, #224]
+    str x30, [sp, #240]
 
-    // Extract EC = ESR_EL1[31:26]
-    lsr x3, x2, #26
+    // Capture exception state
+    add x0, sp, #288
+    str x0, [sp, #248]
+    mrs x0, ELR_EL1
+    str x0, [sp, #256]
+    mrs x0, SPSR_EL1
+    str x0, [sp, #264]
+    mrs x0, ESR_EL1
+    str x0, [sp, #272]
 
-    // Print the low hexadecimal digit
-    and x3, x3, #0xf
+    // Pass exception frame to rust
+    mov x0, sp
+    bl exception_handler
 
-    cmp x3, #9
-    b.le numeric
+    // mrs x2, ESR_EL1
 
-    add x3, x3, #('A' - 10)
-    b print
+    // // Extract EC = ESR_EL1[31:26]
+    // lsr x3, x2, #26
+
+    // // Print the low hexadecimal digit
+    // and x3, x3, #0xf
+
+    // cmp x3, #9
+    // b.le numeric
+
+    // add x3, x3, #('A' - 10)
+    // b print
 
 numeric:
     add x3, x3, #'0'
