@@ -13,13 +13,14 @@ use core::arch::asm;
 
 
 #[no_mangle]
-pub extern "C" fn exception_handler(frame: &ExceptionFrame) -> ! {
+pub extern "C" fn exception_handler(frame: &mut ExceptionFrame) -> () {
 
     let ec = (frame.esr >> 26) & 0x3f;
 
     match ec {
         0x0 => {
             write_str("Invalid instruction.\n");
+            loop {}
         }
         0x3c => { // broken from exception_test()
             unsafe {
@@ -28,13 +29,11 @@ pub extern "C" fn exception_handler(frame: &ExceptionFrame) -> ! {
                 } else {
                     write_str("Wheres the beef?!\n");
                 }
-                // asm!("mrs {}, x4", out(reg) msg);
-                // write_str("x4 = {}\n");
+                frame.elr += 4; // skip breakpoint
             }
         },
         _ => {
             write_str("Unexpected exception class.\n");
         }
     }
-    loop {}
 }

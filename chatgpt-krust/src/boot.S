@@ -112,34 +112,41 @@ sync_handler:
     // Pass exception frame to rust
     mov x0, sp
     bl exception_handler
-
-    // mrs x2, ESR_EL1
-
-    // // Extract EC = ESR_EL1[31:26]
-    // lsr x3, x2, #26
-
-    // // Print the low hexadecimal digit
-    // and x3, x3, #0xf
-
-    // cmp x3, #9
-    // b.le numeric
-
-    // add x3, x3, #('A' - 10)
-    // b print
-
-numeric:
-    add x3, x3, #'0'
-
-print:
-    ldr x0, =0x09000000
-    str w3, [x0]
-
-1:
-    wfe
-    b 1b
+    b post_exception
 
 .global default_handler
 default_handler:
     wfe
     b default_handler
 
+
+post_exception:
+    // Restore system registers
+    ldr x0, [sp, #256]
+    msr ELR_EL1, x0
+    ldr x0, [sp, #264]
+    msr SPSR_EL1, x0
+
+    // Restore general purpose registers
+    ldp x1,  x2,  [sp, #8]
+    ldp x3,  x4,  [sp, #24]
+    ldp x5,  x6,  [sp, #40]
+    ldp x7,  x8,  [sp, #56]
+    ldp x9,  x10, [sp, #72]
+    ldp x11, x12, [sp, #88]
+    ldp x13, x14, [sp, #104]
+    ldp x15, x16, [sp, #120]
+    ldp x17, x18, [sp, #136]
+    ldp x19, x20, [sp, #152]
+    ldp x21, x22, [sp, #168]
+    ldp x23, x24, [sp, #184]
+    ldp x25, x26, [sp, #200]
+    ldp x27, x28, [sp, #216]
+    ldp x29, x30, [sp, #232]
+
+    // Restore x0 and release exception frame
+    ldr x0, [sp, #0]     // Restore x0 from the frame
+    add sp, sp, #288 
+
+    // Return from exception
+    eret

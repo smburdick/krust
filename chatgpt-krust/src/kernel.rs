@@ -9,6 +9,8 @@ use core::arch::asm;
 mod uart;
 mod exception;
 
+use uart::write_str;
+
 #[unsafe(no_mangle)]
 pub extern "C" fn kernel_main() -> () {
     // say_hello();
@@ -40,6 +42,7 @@ fn test_invalid_instruction() -> () {
     unsafe {
         asm!(".inst 0x0");
     }
+    write_str("This shouldn't print!\n");
 }
 
 fn divide_by_zero(x: usize) -> () {
@@ -47,9 +50,11 @@ fn divide_by_zero(x: usize) -> () {
 }
 
 fn text_exception() -> () {
+    write_str("Before BRK\n");
     unsafe {
         asm!("movz x4, #0xBEEF", "movk x4, #0xDEAD, lsl #16", "brk #0", out("x4") _,); // breakpoint exception class 0x3c
     }
+    write_str("After BRK\n");
 }
 
 
