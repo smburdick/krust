@@ -24,7 +24,7 @@ all:
 
 qemu: all
 	qemu-system-aarch64 \
-    -machine virt \
+    -machine virt,gic-version=2 \
     -cpu cortex-a57 \
     -m 128M \
     -serial stdio \

@@ -7,9 +7,11 @@ pub struct ExceptionFrame {
     pub esr: u64,
 }
 
-use crate::uart::write_str;
+use crate::uart::*;
 use core::fmt::Write;
 use core::arch::asm;
+use gic::*;
+use timer::*;
 
 
 #[no_mangle]
@@ -35,5 +37,31 @@ pub extern "C" fn exception_handler(frame: &mut ExceptionFrame) -> () {
         _ => {
             write_str("Unexpected exception class.\n");
         }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn irq_handler_rs(frame: &mut ExceptionFrame) {
+    let id = unsafe { acknowledge_interrupt() };
+    if id >= 1020 {
+        return;
+    }
+    if id == 30 {
+        stop_physical_timer();
+        write_str("timer interrupt recv'd\r\n");
+    } else {
+        write_str("unexpected IRQ: ");
+        write_hex(id);
+        write_str("\r\n"); // TODO: write a string formatter
+    }
+    unsafe { end_interrupt(id); }
+}
+
+pub fn unmask_irq() {
+    unsafe {
+        asm!(
+            "msr DAIFClr, #2",
+            options(nomem, nostack)
+        );
     }
 }

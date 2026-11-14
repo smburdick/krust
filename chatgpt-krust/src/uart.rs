@@ -28,6 +28,15 @@ pub fn write_byte(byte: u8) {
     }
 }
 
+pub fn write_hex(num: u32) {
+    write_str("0x");
+    const HEX: &[u8] = b"0123456789ABCDEF";
+    for i in (0..8).rev() {
+        let nibble = ((num >> (i * 4)) & 0xF) as usize;
+        write_byte(HEX[nibble]);
+    }
+}
+
 pub fn write_str(message: &str) {
     for byte in message.bytes() {
         write_byte(byte);
