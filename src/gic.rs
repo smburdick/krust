@@ -8,6 +8,9 @@ pub const GICD_TYPER: usize = 0x004;
 pub const GICD_CTLR: usize = 0x000;
 pub const GICD_ISENABLER: usize = 0x100;
 pub const GICD_IPRIORITYR: usize = 0x400;
+pub const GICD_ITARGETSR: usize = 0x800;
+
+pub const INTID: u32 = 33;
 
 use core::ptr::{read_volatile, write_volatile};
 
@@ -36,10 +39,18 @@ pub unsafe fn gicd_read(offset: usize) -> u32 {
     read_volatile(reg)
 }
 
+pub unsafe fn gicd_read_byte(offset: usize) -> u8 {
+    let reg = (GICD_BASE + offset) as *const u8;
+    read_volatile(reg)
+}
+
 pub unsafe fn init_distributor() {
     set_priority(30, 0x80); // assign the EL1 physical timer a priority
     enable_interrupt(30); // timer
     gicd_write(0x000, 1); // enable interrupt forwarding -- set bit 0 of GICD_CTLR
+    set_priority(INTID, 0x80);
+    set_target(INTID, 0x01);
+    enable_interrupt(INTID);
 }
 
 pub unsafe fn enable_interrupt(id: u32) {
@@ -50,6 +61,7 @@ pub unsafe fn enable_interrupt(id: u32) {
 
 pub unsafe fn set_priority(id: u32, priority: u8) {
     let offset = GICD_IPRIORITYR + id as usize;
+    gicd_write_byte(offset, priority);
 }
 
 pub unsafe fn init_cpu_interface() {
@@ -63,4 +75,9 @@ pub unsafe fn acknowledge_interrupt() -> u32 {
 
 pub unsafe fn end_interrupt(id: u32) {
     gicc_write(GICC_EOIR, id);
+}
+
+pub unsafe fn set_target(id: u32, cpu_mask: u8) {
+    let offset = GICD_ITARGETSR + id as usize;
+    gicd_write_byte(offset, cpu_mask);
 }

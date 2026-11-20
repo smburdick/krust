@@ -28,6 +28,7 @@ qemu: all
     -machine virt,gic-version=2 \
     -cpu cortex-a57 \
     -m 128M \
+	-smp 2 \
     -serial stdio \
     -display none \
     -monitor tcp:127.0.0.1:4444,server,nowait \

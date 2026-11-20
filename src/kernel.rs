@@ -30,6 +30,14 @@ pub extern "C" fn kernel_main() -> () {
 
     write_str("GIC initialized.\n");
 
+    // Ensure that GICD registers are properly set up
+    unsafe {
+        assert_eq!((gicd_read_byte(GICD_IPRIORITYR + 30) as u32), 0x80);
+        assert_eq!((gicd_read_byte(GICD_IPRIORITYR + 33) as u32), 0x80);
+        assert_eq!((gicd_read_byte(GICD_ITARGETSR + 30) as u32), 0x1);
+        assert_eq!((gicd_read_byte(GICD_ITARGETSR + 33) as u32), 0x2);
+    }
+
     let freq = timer_frequency();
     write_str("Arming timer.\n");
 
@@ -73,7 +81,13 @@ pub extern "C" fn kernel_main() -> () {
 
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    // mask interrupts
+    unsafe {
+        asm!("msr DAIFSet, #0xf");
+    }
+    let mut out = uart::UartWriter;
+    writeln!(out, "{}", info);
     loop {
         unsafe {
             core::arch::asm!("wfe");
