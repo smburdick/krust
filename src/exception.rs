@@ -10,8 +10,8 @@ pub struct ExceptionFrame {
 use crate::uart::*;
 use core::fmt::Write;
 use core::arch::asm;
-use gic::*;
-use timer::*;
+use crate::gic::*;
+use crate::timer::*;
 use core::sync::atomic::{AtomicU64, Ordering};
 
 pub static GLOBAL_TICK_CTR: AtomicU64 = AtomicU64::new(0);

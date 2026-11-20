@@ -1,4 +1,4 @@
-use asm;
+use crate::asm;
 
 pub fn timer_frequency() -> u64 {
     let frequency: u64;

@@ -1,5 +1,0 @@
-Hello World:
-
-as -arch arm64 -o hello.o hello.s
-ld -arch arm64 -lSystem -syslibroot $(xcrun -sdk macosx --show-sdk-path) -e _main -o hello hello.o
-

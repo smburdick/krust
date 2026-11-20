@@ -8,6 +8,7 @@ all:
 		-o bin/boot.o
 
 	rustc \
+		--edition 2021 \
 		--target aarch64-unknown-none \
 		--crate-type staticlib \
 		-C panic=abort \
