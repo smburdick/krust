@@ -9,6 +9,10 @@ const UART_FR: *const u32 = (UART_BASE + 0x18) as *const u32; // flag reg
 
 const UART_FR_TXFF: u32 = 1 << 5; // indication that fifo is full
 
+const UARTIMSC: *mut u32 = (UART_BASE + 0x38) as *mut u32;
+const RXIM: u32 = 1 << 4;
+const RXFE: u32 = 1 << 4;
+
 pub struct UartWriter;
 
 impl Write for UartWriter {
@@ -41,4 +45,18 @@ pub fn write_str(message: &str) {
     for byte in message.bytes() {
         write_byte(byte);
     }
+}
+
+pub unsafe fn enable_rx_interrupt() {
+    let mut reg: u32 = read_volatile(UARTIMSC);
+    reg = reg | (RXIM as u32);
+    write_volatile(UARTIMSC, reg);
+}
+
+pub unsafe fn try_read_byte() -> Option<u8> {
+    let val = read_volatile(UART_FR);
+    if val & RXFE != 0 {
+        return None;
+    }
+    return Some((read_volatile(UART_DR) & 0xFF) as u8);
 }

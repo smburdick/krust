@@ -11,7 +11,7 @@ mod exception;
 mod gic;
 mod timer;
 
-use uart::{write_str, write_hex};
+use uart::*;
 use gic::*;
 use timer::*;
 use exception::*;
@@ -35,13 +35,17 @@ pub extern "C" fn kernel_main() -> () {
         assert_eq!((gicd_read_byte(GICD_IPRIORITYR + 30) as u32), 0x80);
         assert_eq!((gicd_read_byte(GICD_IPRIORITYR + 33) as u32), 0x80);
         assert_eq!((gicd_read_byte(GICD_ITARGETSR + 30) as u32), 0x1);
-        assert_eq!((gicd_read_byte(GICD_ITARGETSR + 33) as u32), 0x2);
+        assert_eq!((gicd_read_byte(GICD_ITARGETSR + 33) as u32), 0x1);
     }
 
     let freq = timer_frequency();
     write_str("Arming timer.\n");
 
     start_physical_timer(freq);
+
+    unsafe {
+        enable_rx_interrupt();
+    }
 
     unmask_irq();
 
@@ -52,18 +56,17 @@ pub extern "C" fn kernel_main() -> () {
             asm!("wfi");
         }
         // write_str("Back in kernel main\n");
-        if !woke {
-            write_str("WFI returned\n");
-            woke = true;
-        }
-        let ticks = GLOBAL_TICK_CTR.load(Ordering::Relaxed);
-        write_str("Tick: ");
-        write_hex(ticks as u32);
-        write_str("\n");
+        // if !woke {
+        //     write_str("WFI returned\n");
+        //     woke = true;
+        // }
+        // let ticks = GLOBAL_TICK_CTR.load(Ordering::Relaxed);
+        // write_str("Tick: ");
+        // write_hex(ticks as u32);
+        // write_str("\n");
         // write_str("Timer control: ");
         // write_hex(read_physical_timer_control() as u32);
         // write_str("\n");
-        
     }
 
     unsafe {
@@ -86,8 +89,7 @@ fn panic(info: &PanicInfo) -> ! {
     unsafe {
         asm!("msr DAIFSet, #0xf");
     }
-    let mut out = uart::UartWriter;
-    writeln!(out, "{}", info);
+    let _ = writeln!(uart::UartWriter, "{}", info);
     loop {
         unsafe {
             core::arch::asm!("wfe");

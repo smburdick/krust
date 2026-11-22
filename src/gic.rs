@@ -10,7 +10,7 @@ pub const GICD_ISENABLER: usize = 0x100;
 pub const GICD_IPRIORITYR: usize = 0x400;
 pub const GICD_ITARGETSR: usize = 0x800;
 
-pub const INTID: u32 = 33;
+pub const UART0_IRQ: u32 = 33;
 
 use core::ptr::{read_volatile, write_volatile};
 
@@ -45,12 +45,15 @@ pub unsafe fn gicd_read_byte(offset: usize) -> u8 {
 }
 
 pub unsafe fn init_distributor() {
+    // timer (PPI)
     set_priority(30, 0x80); // assign the EL1 physical timer a priority
-    enable_interrupt(30); // timer
-    gicd_write(0x000, 1); // enable interrupt forwarding -- set bit 0 of GICD_CTLR
-    set_priority(INTID, 0x80);
-    set_target(INTID, 0x01);
-    enable_interrupt(INTID);
+    enable_interrupt(30);
+    // UART (SPI)
+    set_priority(UART0_IRQ, 0x80);
+    set_target(UART0_IRQ, 0x01);
+    enable_interrupt(UART0_IRQ);
+     // enable interrupt forwarding -- set bit 0 of GICD_CTLR
+    gicd_write(GICD_CTLR, 1);
 }
 
 pub unsafe fn enable_interrupt(id: u32) {
