@@ -1,7 +1,0 @@
-*.o
-*.elf
-*.map
-*.dtb
-*.dts
-*.a
-AGENT_HANDOFF.md
