@@ -58,3 +58,7 @@ pub fn read_physical_timer_control() -> u64 {
     }
     val
 }
+
+pub fn handle_irq() {
+    
+}

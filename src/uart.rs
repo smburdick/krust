@@ -1,6 +1,7 @@
 use core::ptr::{read_volatile, write_volatile};
 use core::hint::spin_loop;
 use core::fmt::{self, Write};
+use crate::ringbuf::RingBuffer;
 
 const UART_BASE: usize = 0x0900_0000; // QEMU VIRT_UART PL011 device
 
@@ -12,6 +13,8 @@ const UART_FR_TXFF: u32 = 1 << 5; // indication that fifo is full
 const UARTIMSC: *mut u32 = (UART_BASE + 0x38) as *mut u32;
 const RXIM: u32 = 1 << 4;
 const RXFE: u32 = 1 << 4;
+
+pub static RX: RingBuffer = RingBuffer::new();
 
 pub struct UartWriter;
 

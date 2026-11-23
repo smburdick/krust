@@ -10,6 +10,7 @@ mod uart;
 mod exception;
 mod gic;
 mod timer;
+mod ringbuf;
 
 use uart::*;
 use gic::*;
@@ -54,6 +55,10 @@ pub extern "C" fn kernel_main() -> () {
     loop {
         unsafe {
             asm!("wfi");
+
+        }
+        while let Some(b) = RX.pop() {
+            write_byte(b);
         }
         // write_str("Back in kernel main\n");
         // if !woke {
@@ -69,16 +74,16 @@ pub extern "C" fn kernel_main() -> () {
         // write_str("\n");
     }
 
-    unsafe {
-        asm!("msr DAIFSet, #2"); // Mask IRQs
-        asm!("msr CNTP_CTL_EL0, xzr"); // Disable physical timer
-    }
+    // unsafe {
+    //     asm!("msr DAIFSet, #2"); // Mask IRQs
+    //     asm!("msr CNTP_CTL_EL0, xzr"); // Disable physical timer
+    // }
 
-    loop {
-        unsafe {
-            asm!("wfi");
-        }
-    }
+    // loop {
+    //     unsafe {
+    //         asm!("wfi");
+    //     }
+    // }
 
 }
 
