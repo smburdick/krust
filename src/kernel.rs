@@ -11,11 +11,13 @@ mod exception;
 mod gic;
 mod timer;
 mod ringbuf;
+mod shell;
 
 use uart::*;
 use gic::*;
 use timer::*;
 use exception::*;
+use shell::*;
 
 use core::sync::atomic::Ordering;
 
@@ -50,15 +52,16 @@ pub extern "C" fn kernel_main() -> () {
 
     unmask_irq();
 
-    let mut woke = false;
-    
+    // let mut woke = false;
+    let mut shell = Shell::new();
+    shell.prompt();
     loop {
         unsafe {
             asm!("wfi");
 
         }
         while let Some(b) = RX.pop() {
-            write_byte(b);
+            shell.handle_byte(b);
         }
         // write_str("Back in kernel main\n");
         // if !woke {
@@ -94,7 +97,7 @@ fn panic(info: &PanicInfo) -> ! {
     unsafe {
         asm!("msr DAIFSet, #0xf");
     }
-    let _ = writeln!(uart::UartWriter, "{}", info);
+    println!("{}", info);
     loop {
         unsafe {
             core::arch::asm!("wfe");

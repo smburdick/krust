@@ -9,7 +9,7 @@ all:
 
 	rustc \
 		--edition 2021 \
-		--target aarch64-unknown-none \
+		--target aarch64-unknown-none-softfloat \
 		--crate-type staticlib \
 		-C panic=abort \
 		-C opt-level=2 \

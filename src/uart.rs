@@ -63,3 +63,21 @@ pub unsafe fn try_read_byte() -> Option<u8> {
     }
     return Some((read_volatile(UART_DR) & 0xFF) as u8);
 }
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        use core::fmt::Write;
+        let _ = write!($crate::uart::UartWriter, $($arg)*);
+    };
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {
+        $crate::print!("\r\n");
+    };
+    ($($arg:tt)*) => {{
+        $crate::print!("{}\r\n", format_args!($($arg)*));
+    }};
+}
