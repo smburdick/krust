@@ -12,6 +12,7 @@ mod gic;
 mod timer;
 mod ringbuf;
 mod shell;
+mod utils;
 
 use uart::*;
 use gic::*;
