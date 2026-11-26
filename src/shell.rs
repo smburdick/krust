@@ -5,6 +5,7 @@ use crate::exception::*;
 use core::sync::atomic::Ordering;
 use core::ptr::{read_volatile};
 use crate::utils::*;
+use core::arch::asm;
 
 const BUF_LEN: usize = 128;
 
@@ -36,7 +37,7 @@ impl Shell {
             "el" => {
                 let current_el: u64;
                 unsafe {
-                    core::arch::asm!(
+                    asm!(
                         "mrs {}, CurrentEL",
                         out(reg) current_el,
                         options(nomem, nostack, preserves_flags)

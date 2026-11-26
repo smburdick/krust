@@ -13,6 +13,7 @@ use core::arch::asm;
 use crate::gic::*;
 use crate::timer::*;
 use core::sync::atomic::{AtomicU64, Ordering};
+use crate::println;
 
 pub static GLOBAL_TICK_CTR: AtomicU64 = AtomicU64::new(0);
 
@@ -20,24 +21,32 @@ pub static GLOBAL_TICK_CTR: AtomicU64 = AtomicU64::new(0);
 pub extern "C" fn exception_handler(frame: &mut ExceptionFrame) -> () {
 
     let ec = (frame.esr >> 26) & 0x3f;
-
     match ec {
         0x0 => {
-            write_str("Invalid instruction.\n");
-            loop {}
+            println!("Invalid instruction.");
         }
-        0x3c => { // broken from exception_test()
+        0x25 => { // faulty address
+            let far_el1: u64;
             unsafe {
-                if frame.x[4] == 0xDEADBEEF {
-                    write_str("Yum!\n");
-                } else {
-                    write_str("Wheres the beef?!\n");
+                unsafe {
+                    asm!(
+                        "mrs {}, FAR_EL1",
+                        out(reg) far_el1,
+                        options(nomem, nostack, preserves_flags)
+                    );
                 }
-                frame.elr += 4; // skip breakpoint
             }
+            println!("Faulty address.");
+            println!("FAR_EL1 = {:#010x}, ELS = {:#010x}, DFSC = {:#05x}", far_el1, frame.elr, frame.esr & 0x3F);
         },
         _ => {
-            write_str("Unexpected exception class.\n");
+            println!("Unexpected exception EC={:#x} ESR={:#x}", ec, frame.esr);
+        },
+   
+    }
+    unsafe {
+        loop {
+            asm!("wfe");
         }
     }
 }
@@ -81,9 +90,7 @@ pub extern "C" fn irq_handler_rs(frame: &mut ExceptionFrame) {
         }
         }
     } else {
-        write_str("unexpected IRQ: ");
-        write_hex(id);
-        write_str("\r\n"); // TODO: write a string formatter
+        println!("unexpected IRQ: {:#x}", id);
     }
     unsafe { end_interrupt(id); }
 }
